@@ -1,0 +1,88 @@
+﻿
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>UploadFileModel</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label for="ISBN" class="form-label">UserId</label>
+            <input class="form-control"  type="number" id="USER-ID">
+        </div>
+        <div class="mb-3">
+            <label for="ISBN" class="form-label">ISBN</label>
+            <input class="form-control" type="text" id="ISBN-ID">
+        </div>
+        <div class="mb-3">
+            <label for="formFile" class="form-label">Document</label>
+            <input class="form-control" accept="application/pdf" type="file" id="fileToUpload">
+        </div>
+        <div class="form-group">
+            <button id="upload" class="btn btn-primary"> upload </button>
+        </div>
+
+    </div>
+</div>
+
+
+
+@section Scripts
+{
+    <script>
+       
+
+       
+
+
+        $('#upload').on("click", function () {
+            var file = document.getElementById('fileToUpload').files[0];
+            var userId = $("#USER-ID").val();
+            var isbn = $("#ISBN-ID").val();
+            upload(file,userId,isbn);
+        });
+        
+       var uploadComplete = function (isbn,userId) {
+           var formData = new FormData();
+           formData.append('ISBN', isbn);
+           formData.append('USER_ID', userId);
+           var xhr = new XMLHttpRequest();
+           xhr.open("POST", "UploadComplete", false);
+           xhr.send(formData);
+        }
+        
+        
+        function upload(file, userId, isbn) {
+            var blob = file;
+            var BYTES_PER_CHUNK = 1024 * 1024 * 20; 
+            var SIZE = file.size;               
+            var start = 0;
+            var end = BYTES_PER_CHUNK;
+            var count = SIZE % BYTES_PER_CHUNK == 0 ? SIZE / BYTES_PER_CHUNK : Math.floor(SIZE / BYTES_PER_CHUNK) + 1;
+            var index = 0;
+            while (start < SIZE) {
+                var chunk = blob.slice(start, end);
+                var data = new FormData();
+                data.append("ISBN", isbn);
+                data.append("USER_ID", userId);
+                data.append("CHUNK_INDEX", index);
+                data.append("CHUNK", chunk);
+                var xhr = new XMLHttpRequest();
+                xhr.onload = function(){
+                    index ++;
+                    if (index === count)
+                        uploadComplete(isbn,userId);
+                }
+                xhr.open("POST", "UploadChunks", false);
+                xhr.send(data);
+                start = end;
+                end = start + BYTES_PER_CHUNK;
+            }   
+        }
+
+    </script>
+}
